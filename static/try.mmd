@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant Stub as Stub-server (клиент)
+
+    box rgba(230,245,255,0.6) DNS
+        participant Rec as Recursive Resolver<br/>(192.168.1.1)
+        participant Root as Root-servers (.) NS<br/>(l.root-servers.net)
+        participant RU as TLD Domain (.ru.) NS<br/>(a.dns.ripn.net)
+        participant Auth as User Domain (zlatoivan.ru.) NS<br/>(ns4.timeweb.org)
+    end
+
+    Note right of Rec: Транспорт: UDP/53 (fallback TCP/53)
+
+    Stub->>Rec: 1) A? zlatoivan.ru
+    Rec->>Rec: 2) Root hints / cache
+    Rec->>Root: 3) A? zlatoivan.ru
+    Root-->>Rec: 4) NS для ru. (реферал)
+    Rec->>RU: 5) A? zlatoivan.ru
+    RU-->>Rec: 6) NS для zlatoivan.ru (реферал)
+    Rec->>Auth: 7) A? zlatoivan.ru
+    Auth-->>Rec: 8) A = 45.156.24.213
+    Rec-->>Stub: 9) A = 45.156.24.213

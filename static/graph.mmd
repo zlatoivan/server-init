@@ -1,0 +1,36 @@
+flowchart LR
+    subgraph Интернет
+        U["Пользователь (браузер)"]
+        DNS["DNS timeweb.cloud<br/>A: zlatoivan.ru → 45.156.24.213"]
+        LE["Let's Encrypt CA<br/>ACME валидация"]
+    end
+
+    subgraph Сервер_45-156-24-213
+        subgraph Docker_bridge_web
+            Caddy["Caddy (reverse proxy)<br/>80/443 (TLS)"]
+            BE["Backend Go<br/>http://backend:7070"]
+        end
+        Caddyfile["/etc/caddy/Caddyfile<br/>(volume)"]
+    end
+
+%% DNS резолвинг
+    U -->|A? zlatoivan.ru| DNS
+    DNS -->|A=45.156.24.213| U
+
+%% Пользовательский трафик
+    U -->|HTTPS 443 Host: zlatoivan.ru| Caddy
+    U -.->|HTTP 80 редирект или HTTP-01| Caddy
+
+%% Реверс прокси
+    Caddy -->|reverse_proxy backend:7070| BE
+
+%% Ответ пользователю
+    BE -->|HTTP 200| Caddy
+    Caddy -->|HTTPS ответ| U
+
+%% Сертификаты ACME
+    Caddy <==>|ACME: order-renew| LE
+    LE -.->|HTTP-01 или TLS-ALPN-01 проверка| Caddy
+
+%% Связь файла
+    Caddyfile -->|site: zlatoivan.ru| Caddy

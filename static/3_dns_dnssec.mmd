@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    participant Stub as Stub Resolver (клиент)
+    participant Rec as Рекурсивный резолвер (192.168.1.1)
+    participant Root as Root (l.root-servers.net)
+    participant RU as TLD .ru (a.dns.ripn.net)
+    participant Auth as Авторитативный NS (ns1/ns2/ns3/ns4.timeweb.*)
+
+    Note over Rec: Trust anchor: DNSKEY корня (.) преднастроен
+
+    Stub->>Rec: 1) A? zlatoivan.ru (RD=1, DO=1)
+    Rec->>Root: 2) A? zlatoivan.ru (RD=0, DO=1)
+    Root-->>Rec: 3) Делегация в ru.<br/>NS ru. + DS(ru) + RRSIG
+
+    Note over Rec: Проверка: DNSKEY(.) доверенный → валидируем RRSIG/DS для ru.
+
+    Rec->>RU: 4) NS? zlatoivan.ru (RD=0, DO=1)
+    RU-->>Rec: 5) Делегация к Timeweb<br/>NS: ns1/ns2.timeweb.ru, ns3/ns4.timeweb.org<br/>+ RRSIG (ru.)
+
+    Rec->>RU: 6) DNSKEY ru. (RD=0, DO=1)
+    RU-->>Rec: 7) DNSKEY ru. + RRSIG
+    Note over Rec: Сверяем DS(ru) из корня ↔ хеш DNSKEY(ru).<br/>Валидируем RRSIG(NS) от ru.
+
+    Rec->>Auth: 8) DNSKEY zlatoivan.ru (RD=0, DO=1)
+    Auth-->>Rec: 9) DNSKEY zlatoivan.ru + RRSIG
+
+    Rec->>Auth: 10) A? zlatoivan.ru (RD=0, DO=1)
+    Auth-->>Rec: 11) A=45.156.24.213 + RRSIG(A)
+
+    Note over Rec: Валидируем RRSIG(A) ключом DNSKEY(zlatoivan.ru)
+
+    Rec-->>Stub: 12) A=45.156.24.213 (RA=1, AD=1, TTL≈600с)

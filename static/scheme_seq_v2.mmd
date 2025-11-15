@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant User as Пользователь
+    participant DNS as DNS timeweb.cloud
+    participant Caddy as Caddy
+    participant Backend as Backend Go
+    participant ACME as Let's Encrypt CA
+
+    User->>DNS: A? zlatoivan.ru
+    DNS-->>User: A=45.156.24.213
+
+    User->>Caddy: HTTPS 443 (Host: zlatoivan.ru)
+    User-)Caddy: HTTP 80 (редирект или HTTP-01)  %% пунктир, если поддерживается
+
+    Caddy->>Backend: reverse_proxy backend:7070
+    Backend-->>Caddy: HTTP 200...
+
+    Caddy-->>User: HTTPS ответ
+
+    Caddy->>ACME: ACME: order/renew
+    ACME-->>Caddy: HTTP-01 или TLS-ALPN-01 (проверка домена)

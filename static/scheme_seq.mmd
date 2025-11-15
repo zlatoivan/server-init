@@ -1,0 +1,17 @@
+sequenceDiagram
+    autonumber
+    participant U as Пользователь (браузер)
+    participant DNS as DNS timeweb.cloud
+    participant S as Сервер (45.156.24.213)
+    participant C as Caddy (reverse proxy)
+    participant B as Backend Go (localhost:7070)
+
+    U->>DNS: A-запрос: zlatoivan.ru
+    DNS-->>U: A=45.156.24.213
+    U->>S: TCP 443 (HTTPS) GET https://zlatoivan.ru
+    Note right of S: Пакеты приходят на 45.156.24.213:443
+    S->>C: Соединение принято (Caddy слушает 80/443)
+    Note right of C: TLS-терминация, выбор сайта по Host=zlatoivan.ru (Caddyfile)
+    C->>B: HTTP прокси на http://localhost:7070
+    B-->>C: HTTP 200 (или другая бизнес-логика)
+    C-->>U: HTTPS ответ (через Caddy, с сертификатом)

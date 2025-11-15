@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant Stub as Stub Resolver<br/>(client)
+    participant Rec as DNS<br/>Recursive Resolver<br/>(192.168.1.1)
+    participant Root as DNS<br/>Root-servers (.) NS<br/>(l.root-servers.net)
+    participant RU as DNS<br/>TLD Domain (ru.) NS<br/>(a.dns.ripn.net)
+    participant Auth as DNS<br/>User Domain (zlatoivan.ru.) NS<br/>(ns4.timeweb.org)
+
+    Stub->>Rec: A? zlatoivan.ru
+
+    Rec->>Rec: root-servers NS? root hints/cache: a-n.root-servers.net.
+
+    Rec->>Root: A? zlatoivan.ru
+    Root-->>Rec: Referral to ru. NS: a/b/d/e/f.dns.ripn.net.
+
+    Rec->>RU: A? zlatoivan.ru
+    RU-->>Rec: Referral to zlatoivan.ru NS: ns1-4.timeweb.ru/org.
+
+    Rec->>Auth: A? zlatoivan.ru
+    Auth-->>Rec: A = 45.156.24.213
+
+    Rec-->>Stub: A = 45.156.24.213

@@ -1,0 +1,6 @@
+# Refer to the Caddy docs for more information:
+# https://caddyserver.com/docs/caddyfile
+
+zlatoivan.ru {
+    reverse_proxy localhost:7070
+}

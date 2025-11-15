@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    participant Stub as Stub
+    participant Rec as Recursive
+    participant Root as .
+    participant RU as .ru
+    participant Auth as zlatoivan.ru
+
+    Stub->>Rec: A? zlatoivan.ru
+    Rec->>Root: A? zlatoivan.ru
+    Root-->>Rec: Referral -> .ru
+    Rec->>RU: A? zlatoivan.ru
+    RU-->>Rec: Referral -> zlatoivan.ru
+    Rec->>Auth: A? zlatoivan.ru
+    Auth-->>Rec: A = 45.156.24.213
+    Rec-->>Stub: A = 45.156.24.213
