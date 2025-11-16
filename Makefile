@@ -1,6 +1,10 @@
 SHELL := /bin/bash
 DIR ?= .
 
+.PHONY: compose-up
+compose-up:
+	docker compose up -d --build
+
 .PHONY: static clean-svg dot-svg mmd-svg
 static: clean-svg dot-svg mmd-svg
 

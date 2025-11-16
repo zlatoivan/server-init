@@ -1,0 +1,190 @@
+---
+# Короткий плейбук Ansible (аналог config/init_server.sh)
+# Запуск:
+#   ansible-playbook -i inventory.ini init_server.yml -u <user> --ask-become-pass
+# Переменные:
+#   target_user: пользователь для fish/starship (по умолчанию ansible_user)
+- name: Server init (Docker, Caddy, fish, starship, tooling)
+  hosts: all
+  become: true
+  vars:
+    target_user: "{{ ansible_user }}"
+    target_user_home: "{{ lookup('ansible.builtin.env', 'HOME') if (target_user == ansible_user and not ansible_become) else (lookup('ansible.builtin.pipe', 'getent passwd ' ~ target_user ~ ' | cut -d: -f6') | default('/home/' ~ target_user, true)) }}"
+
+  pre_tasks:
+    - name: apt cache up-to-date
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      tags: [packages]
+
+    - name: Base tools
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - software-properties-common
+          - gnupg
+          - lsb-release
+          - debian-keyring
+          - debian-archive-keyring
+          - curl
+          - rsync
+        state: present
+      tags: [packages]
+
+  tasks:
+    - name: Add PPAs (neovim, golang, fish)
+      ansible.builtin.apt_repository:
+        repo: "{{ item }}"
+        state: present
+        update_cache: false
+      loop:
+        - ppa:neovim-ppa/stable
+        - ppa:longsleep/golang-backports
+        - ppa:fish-shell/release-3
+      tags: [repos]
+
+    # Docker CE repo (keyring + repo)
+    - name: Docker GPG key (ASCII)
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /usr/share/keyrings/docker-archive-keyring.gpg.asc
+        mode: "0644"
+      tags: [docker, repos]
+
+    - name: Docker GPG dearmor -> keyring
+      ansible.builtin.command:
+        cmd: "gpg --dearmor --batch --yes -o /usr/share/keyrings/docker-archive-keyring.gpg /usr/share/keyrings/docker-archive-keyring.gpg.asc"
+      args:
+        creates: /usr/share/keyrings/docker-archive-keyring.gpg
+      tags: [docker, repos]
+
+    - name: Get dpkg architecture
+      ansible.builtin.command: dpkg --print-architecture
+      register: dpkg_arch
+      changed_when: false
+      tags: [repos]
+
+    - name: Add Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch={{ dpkg_arch.stdout }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+        filename: docker
+        state: present
+      tags: [docker, repos]
+
+    # Caddy repo via Cloudsmith
+    - name: Caddy GPG key (ASCII)
+      ansible.builtin.get_url:
+        url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+        dest: /usr/share/keyrings/caddy-stable-archive-keyring.gpg.asc
+        mode: "0644"
+      tags: [caddy, repos]
+
+    - name: Caddy GPG dearmor -> keyring
+      ansible.builtin.command:
+        cmd: "gpg --dearmor --batch --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /usr/share/keyrings/caddy-stable-archive-keyring.gpg.asc"
+      args:
+        creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      tags: [caddy, repos]
+
+    - name: Configure Caddy apt repo list (from official debian.deb.txt)
+      ansible.builtin.get_url:
+        url: https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt
+        dest: /etc/apt/sources.list.d/caddy-stable.list
+        mode: "0644"
+      tags: [caddy, repos]
+
+    - name: apt update after repos
+      ansible.builtin.apt:
+        update_cache: true
+      tags: [packages]
+
+    - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - neovim
+          - golang-go
+          - make
+          - fish
+          - docker-ce
+          - docker-compose-plugin
+          - caddy
+        state: present
+      tags: [packages]
+
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        groups: docker
+        append: true
+      tags: [docker]
+
+    - name: Ensure ~/.config and go/bin
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      loop:
+        - "{{ target_user_home }}/go/bin"
+        - "{{ target_user_home }}/.config"
+        - "{{ target_user_home }}/.config/fish"
+      tags: [fish]
+
+    - name: Deploy fish config
+      ansible.builtin.copy:
+        src: ../config/config.fish
+        dest: "{{ target_user_home }}/.config/fish/config.fish"
+        mode: "0644"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags: [fish]
+
+    - name: Make fish default shell
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        shell: /usr/bin/fish
+      tags: [fish]
+
+    - name: Install starship (if not present)
+      ansible.builtin.shell: "curl -sS https://starship.rs/install.sh | sh -s -- -y"
+      args:
+        creates: /usr/local/bin/starship
+      tags: [starship]
+
+    - name: Deploy starship config
+      ansible.builtin.copy:
+        src: ../config/starship.toml
+        dest: "{{ target_user_home }}/.config/starship.toml"
+        mode: "0644"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags: [starship]
+
+    - name: Deploy Caddyfile
+      ansible.builtin.copy:
+        src: ../config/Caddyfile
+        dest: /etc/caddy/Caddyfile
+        mode: "0644"
+        owner: root
+        group: root
+      tags: [caddy]
+
+    - name: Enable & start caddy
+      ansible.builtin.service:
+        name: caddy
+        state: started
+        enabled: true
+      tags: [caddy]
+
+    - name: Disable MOTD scripts (chmod -x)
+      ansible.builtin.shell: "chmod -x /etc/update-motd.d/*"
+      args:
+        warn: false
+      register: motd_chmod
+      changed_when: motd_chmod.rc == 0
+      tags: [tuning]
+
+

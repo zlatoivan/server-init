@@ -1,11 +1,11 @@
 services:
   caddy:
     image: caddy:2.9.1-alpine
-#    ports:
-#      - "80:80"
-#      - "443:443"
-    volumes:
-      - /etc/caddy/Caddyfile:/etc/caddy/Caddyfile
-#      - ./config/init/Caddyfile:/etc/caddy/Caddyfile
     restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile
+#      - $PWD/Caddyfile:/etc/caddy/Caddyfile
     network_mode: host
