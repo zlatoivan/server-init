@@ -26,3 +26,13 @@ mmd-svg:
 			set base (string replace -r "\.(mmd|mermaid)\$$" "" -- "$$f"); \
 			gmmd "$$base"; \
 		end'
+
+
+# local
+
+.PHONY: fish
+fish:
+	@mkdir -p ~/.config/fish
+	cp config/fish/config.fish ~/.config/fish/config.fish
+	rsync -a config/fish/conf.d/ ~/.config/fish/conf.d/
+	@fish
