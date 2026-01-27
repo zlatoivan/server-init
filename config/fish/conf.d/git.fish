@@ -8,6 +8,7 @@ alias gch   'git checkout HEAD --'
 alias gb    'git branch'
 alias gbd   'git branch -d'
 alias gbD   'git branch -D'
+alias gpd   'git push origin --delete'
 alias gbv   'git branch -vv'
 alias grv   'git remote -v'
 function gcbm # Создать ветку с состоянием мастера
