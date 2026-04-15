@@ -6,6 +6,7 @@ alias ydlf 'yt-dlp -F'
 # Скачать видео в лучшем качестве. Можно задать ограничение по качеству флагом -q.
 function ydl
     set out "$HOME/Documents/Видео/yt-dlp"
+    set cookies "$out/www.youtube.com_cookies.txt" # Расширение Get cookies.txt LOCALLY
     set default_q 1080
     set fmt "bv[height<=$default_q][ext=mp4]+ba[ext=m4a]/b[height<=$default_q][ext=mp4]"
 
@@ -20,13 +21,13 @@ function ydl
     end
 
     yt-dlp -F $argv
-    yt-dlp -P "$out" -f "$fmt" $argv
+    yt-dlp --cookies "$cookies" -P "$out" -f "$fmt" $argv
 end
 
 # Скачать из инсты
 function idl
     set out "$HOME/Documents/Видео/inst"
-    set cookies "$out/www.instagram.com_cookies.txt"
+    set cookies "$out/www.instagram.com_cookies.txt" # Расширение Get cookies.txt LOCALLY
     set fmt "bv*+ba/best"
 
     for url in $argv
@@ -40,7 +41,7 @@ function idl
 end
 
 # Скачать только аудио
-alias ydla 'yt-dlp -P "$HOME/Documents/Видео/yt-dlp" -x --audio-format m4a --audio-quality 0 -f "ba"'
+alias ydla 'yt-dlp --cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt" -P "$HOME/Documents/Видео/yt-dlp" -x --audio-format m4a --audio-quality 0 -f "ba"'
 
 # Посмотреть инфу о видео
 function vinfo --description "Show media info via ffprobe"
