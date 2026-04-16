@@ -41,7 +41,9 @@ function idl
 end
 
 # Скачать только аудио
-alias ydla 'yt-dlp --cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt" -P "$HOME/Documents/Видео/yt-dlp" -x --audio-format m4a --audio-quality 0 -f "ba"'
+alias ydla 'yt-dlp --cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt" -P "$HOME/Documents/Видео/yt-dlp" -x --audio-format mp3 --audio-quality 0 -f "ba"'
+
+alias ydla2 'yt-dlp --cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt" -P "$HOME/Documents/Видео/yt-dlp" -x --audio-format m4a --audio-quality 0 -f "ba"'
 
 # Посмотреть инфу о видео
 function vinfo --description "Show media info via ffprobe"
