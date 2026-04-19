@@ -25,7 +25,7 @@ mkdir -p $HOME/go/bin
 # fish
 mkdir -p ~/.config/fish
 rsync -a ~/server-init/config/fish/config.fish ~/.config/fish/config.fish
-rsync -a ~/server-init/config/fish/conf.d ~/.config/fish
+rsync -a ~/server-init/config/fish/conf.d ~/.config/fish/
 chsh -s /usr/bin/fish $USER
 
 # starship
