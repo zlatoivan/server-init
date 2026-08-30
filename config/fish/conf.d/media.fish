@@ -1,12 +1,11 @@
 # Media aliases
 
 # Показать доступные форматы видео
-alias ydlf 'yt-dlp -F'
+alias ydlf 'yt-dlp --cookies-from-browser chrome -F'
 
 # Скачать видео в лучшем качестве. Можно задать ограничение по качеству флагом -q.
 function ydl
     set out "$HOME/Documents/Видео/yt-dlp"
-    set cookies "$out/www.youtube.com_cookies.txt" # Расширение Get cookies.txt LOCALLY
     set default_q 1080
     set fmt "bv[height<=$default_q][ext=mp4]+ba[ext=m4a]/b[height<=$default_q][ext=mp4]"
 
@@ -20,9 +19,8 @@ function ydl
         end
     end
 
-    yt-dlp -F $argv
+    ydlf
     yt-dlp \
-        # --cookies "$cookies" \
         --cookies-from-browser chrome \
         -P "$out" \
         -f "$fmt" \
@@ -32,27 +30,24 @@ end
 # Скачать только аудио
 function ydla
     set out "$HOME/Documents/Видео/yt-dlp"
-    set cookies "$out/www.youtube.com_cookies.txt" # Расширение Get cookies.txt LOCALLY
 
-    yt-dlp -F $argv
+    ydlf
     yt-dlp \
-        # --cookies "$cookies" \
         --cookies-from-browser chrome \
         -P "$out" \
         -x --audio-format mp3 --audio-quality 0 \
-        -f "140/bestaudio[ext=m4a]/bestaudio" \ # 140 - m4a audio only (medium); bestaudio[ext=m4a] - m4a lower; bestaudio - webm and other
+        # 140 - m4a audio only (medium); bestaudio[ext=m4a] - m4a lower; bestaudio - webm and other
+        -f "140/bestaudio[ext=m4a]/bestaudio" \
         $argv
 end
 
 # Скачать из инсты
 function idl
     set out "$HOME/Documents/Видео/inst"
-    set cookies "$out/www.instagram.com_cookies.txt" # Расширение Get cookies.txt LOCALLY
     set fmt "bv*+ba/best"
 
     for url in $argv
         yt-dlp \
-            # --cookies "$cookies" \
             --cookies-from-browser chrome \
             -P "$out" \
             -f "$fmt" \
@@ -82,15 +77,10 @@ function ydlt
         return 1
     end
 
-    if not set -q OPENAI_API_KEY
-        echo "OPENAI_API_KEY is not set"
-        return 1
-    end
-
     set audio_file (yt-dlp \
         --cookies-from-browser chrome \
         -P "$audio_out" \
-        -f "251/140/bestaudio" \
+        -f "140/251/bestaudio/91/18" \
         --quiet \
         --no-warnings \
         --no-simulate \
@@ -102,21 +92,9 @@ function ydlt
         return 1
     end
 
-    set base_name (basename "$audio_file")
-    set stem (string replace -r '\.[^.]+$' '' "$base_name")
-    set transcript_file "$transcript_out/$stem.txt"
-
-    curl --fail-with-body -sS https://api.openai.com/v1/audio/transcriptions \
-        -H "Authorization: Bearer $OPENAI_API_KEY" \
-        -F model=whisper-1 \
-        -F file=@"$audio_file" \
-        -F response_format=text \
-        -o "$transcript_file"
-
-    if test $status -ne 0
-        echo "Transcription failed"
-        return 1
-    end
-
-    echo "Saved transcript: $transcript_file"
+    mlx_whisper "$audio_file" \
+        --model mlx-community/whisper-large-v3-turbo \
+        --language ru \
+        --output-dir "$transcript_out" \
+        --output-format txt
 end
