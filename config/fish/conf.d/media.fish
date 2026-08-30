@@ -1,10 +1,35 @@
 # Media aliases
 
+function __yt_dlp_with_cookies
+    set cookie_file $argv[1]
+    set -e argv[1]
+
+    if test -f "$cookie_file"
+        yt-dlp --cookies "$cookie_file" $argv
+        set status_code $status
+
+        if test $status_code -eq 0
+            return 0
+        end
+
+        printf '\033[31mCookies file failed, retrying with Chrome cookies...\033[0m\n' >&2
+    else
+        printf '\033[31mCookies file not found, using Chrome cookies...\033[0m\n' >&2
+    end
+
+    yt-dlp --cookies-from-browser chrome $argv
+end
+
 # Показать доступные форматы видео
-alias ydlf 'yt-dlp --cookies-from-browser chrome -F'
+function ydlf
+    set cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt"
+
+    __yt_dlp_with_cookies "$cookies" -F $argv
+end
 
 # Скачать видео в лучшем качестве. Можно задать ограничение по качеству флагом -q.
 function ydl
+    set cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt"
     set out "$HOME/Documents/Видео/yt-dlp"
     set default_q 1080
     set fmt "bv[height<=$default_q][ext=mp4]+ba[ext=m4a]/b[height<=$default_q][ext=mp4]"
@@ -19,9 +44,8 @@ function ydl
         end
     end
 
-    ydlf
-    yt-dlp \
-        --cookies-from-browser chrome \
+    ydlf $argv
+    __yt_dlp_with_cookies "$cookies" \
         -P "$out" \
         -f "$fmt" \
         $argv
@@ -29,11 +53,10 @@ end
 
 # Скачать только аудио
 function ydla
+    set cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt"
     set out "$HOME/Documents/Видео/yt-dlp"
 
-    ydlf
-    yt-dlp \
-        --cookies-from-browser chrome \
+    __yt_dlp_with_cookies "$cookies" \
         -P "$out" \
         -x --audio-format mp3 --audio-quality 0 \
         # 140 - m4a audio only (medium); bestaudio[ext=m4a] - m4a lower; bestaudio - webm and other
@@ -43,12 +66,12 @@ end
 
 # Скачать из инсты
 function idl
+    set cookies "$HOME/Documents/Видео/inst/www.instagram.com_cookies.txt"
     set out "$HOME/Documents/Видео/inst"
     set fmt "bv*+ba/best"
 
     for url in $argv
-        yt-dlp \
-            --cookies-from-browser chrome \
+        __yt_dlp_with_cookies "$cookies" \
             -P "$out" \
             -f "$fmt" \
             --merge-output-format mp4 \
@@ -69,18 +92,13 @@ end
 
 # Скачать видео и аудио и сделать транскрибацию
 function ydlt
-    set audio_out "$HOME/Documents/Видео/yt-dlp"
-    set transcript_out "$HOME/Downloads"
+    set cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt"
+    set audio_out "$HOME/Documents/Видео/transcription"
+    set transcript_out "$HOME/Documents/Видео/transcription"
 
-    if test (count $argv) -eq 0
-        echo "Usage: ydlt <youtube-url>"
-        return 1
-    end
-
-    set audio_file (yt-dlp \
-        --cookies-from-browser chrome \
+    set audio_file (__yt_dlp_with_cookies "$cookies" \
         -P "$audio_out" \
-        -f "140/251/bestaudio/91/18" \
+        -f "140/bestaudio[ext=m4a]/bestaudio" \
         --quiet \
         --no-warnings \
         --no-simulate \
