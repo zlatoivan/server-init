@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1778017446512,
+  "projectRoot": "/Users/izlatovratskiy/GolandProjects/server/server-init",
+  "techStack": {
+    "languages": [
+      {
+        "name": "C/C++",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "Makefile"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "make build",
+    "testCommand": "make test",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "static"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "ansible": {
+      "path": "ansible",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1778017446504,
+      "keyFiles": [
+        "README.md",
+        "init_server.yml",
+        "inventory.ini"
+      ]
+    },
+    "config": {
+      "path": "config",
+      "purpose": "Configuration files",
+      "fileCount": 3,
+      "lastAccessed": 1778017446504,
+      "keyFiles": [
+        "Caddyfile",
+        "init_server.sh",
+        "starship.toml"
+      ]
+    },
+    "static": {
+      "path": "static",
+      "purpose": "Static files",
+      "fileCount": 14,
+      "lastAccessed": 1778017446504,
+      "keyFiles": [
+        "1_dns_simple.mmd",
+        "1_dns_simple.svg",
+        "2_dns_detailed.mmd",
+        "2_dns_detailed.svg",
+        "3_dns_dnssec.mmd"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

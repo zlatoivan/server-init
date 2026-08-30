@@ -1,6 +1,10 @@
 SHELL := /bin/bash
 DIR ?= .
 
+.PHONY: help
+help: ## Show available commands
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make <target> ENV=local|stg|prod\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
 .PHONY: compose-up
 compose-up:
 	docker compose up -d --build
