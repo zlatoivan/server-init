@@ -93,7 +93,7 @@ end
 # Скачать видео и аудио и сделать транскрибацию
 function ydlt
     set cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt"
-    set audio_out "$HOME/Documents/Видео/transcription/audio"
+    set audio_out "$HOME/Documents/Видео/transcription"
     set transcript_out "$HOME/Documents/Видео/transcription"
 
     set audio_file (__yt_dlp_with_cookies "$cookies" \
@@ -110,6 +110,30 @@ function ydlt
         return 1
     end
 
+    set transcript_file (python3 -c 'from pathlib import Path
+import sys
+
+audio_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+print(transcript_out / audio_file.with_suffix(".txt").name)
+' "$audio_file" "$transcript_out")
+
+    if test -f "$transcript_file"
+        echo "Transcript already exists: $transcript_file"
+        if test -f "$audio_file"
+            rm "$audio_file"
+        end
+
+        touch "$transcript_file"
+        echo "Transcript folder: $transcript_out"
+        python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
+        return 0
+    end
+
     mlx_whisper "$audio_file" \
         --model mlx-community/whisper-large-v3-turbo \
         --language ru \
@@ -121,13 +145,21 @@ function ydlt
         return 1
     end
 
-    open "$transcript_out"
+    if test -f "$audio_file"
+        rm "$audio_file"
+    end
+
+    echo "Transcript folder: $transcript_out"
+    python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
 end
 
-# Сделать конспект транскрипции через OpenAI
-function ydls
+function txtsummary
     if test (count $argv) -lt 1
-        echo "Usage: ydls <transcript.txt>"
+        echo "Usage: txtsummary <transcript.txt>"
         return 2
     end
 
@@ -138,8 +170,70 @@ function ydls
         return 1
     end
 
+    begin
+        echo "Саммаризируй материал:"
+        echo
+        cat "$transcript_file"
+    end | pbcopy
+
+    open "https://claude.ai/new"
+    echo "Prompt copied to clipboard. Paste it into Claude with Cmd+V."
+end
+
+# Скачать аудио, сделать транскрибацию и подготовить саммаризацию в Claude
+function ydls
+    set transcript_out "$HOME/Documents/Видео/transcription"
+
+    ydlt $argv
+    if test $status -ne 0
+        return 1
+    end
+
+    set transcript_file (python3 -c 'import glob
+import os
+import sys
+
+files = glob.glob(os.path.join(sys.argv[1], "*.txt"))
+print(max(files, key=os.path.getmtime) if files else "")
+' "$transcript_out")
+
+    if test -z "$transcript_file"
+        echo "Transcript file not found in $transcript_out" >&2
+        return 1
+    end
+
+    txtsummary "$transcript_file"
+end
+
+# Сделать конспект транскрипции через OpenAI
+function ydlsa
+    if test (count $argv) -lt 1
+        echo "Usage: ydls <youtube-url>"
+        return 2
+    end
+
     if not set -q OPENAI_API_KEY
         echo "OPENAI_API_KEY is not set" >&2
+        return 1
+    end
+
+    set transcript_out "$HOME/Documents/Видео/transcription"
+
+    ydlt $argv
+    if test $status -ne 0
+        return 1
+    end
+
+    set transcript_file (python3 -c 'import glob
+import os
+import sys
+
+files = glob.glob(os.path.join(sys.argv[1], "*.txt"))
+print(max(files, key=os.path.getmtime) if files else "")
+' "$transcript_out")
+
+    if test -z "$transcript_file"
+        echo "Transcript file not found in $transcript_out" >&2
         return 1
     end
 
@@ -166,24 +260,14 @@ api_key = os.environ.get("OPENAI_API_KEY")
 with open(transcript_path, "r", encoding="utf-8") as transcript_file:
     transcript = transcript_file.read()
 
-prompt = """Проанализируй транскрипцию.
-
-Сделай:
-1. Главную идею в 2-3 предложениях
-2. 7-10 ключевых тезисов
-3. Все практические рекомендации
-4. Важные цифры и исследования, упомянутые автором
-5. Отдельно: спорные / неподтвержденные утверждения
-6. Итоговый actionable checklist
-
-Не добавляй информацию, которой нет в транскрипции."""
+prompt = """Саммаризируй"""
 
 payload = {
     "model": model,
     "input": [
         {
             "role": "user",
-            "content": prompt + "\n\nТранскрипция:\n" + transcript,
+            "content": prompt + "\n\nМатериал:\n" + transcript,
         }
     ],
 }
