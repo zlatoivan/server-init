@@ -2,5 +2,17 @@
 # https://caddyserver.com/docs/caddyfile
 
 zlatoivan.ru {
-    reverse_proxy localhost:7070
+    reverse_proxy localhost:7000
+}
+
+summarizer.zlatoivan.ru {
+    reverse_proxy localhost:7001
+}
+
+compas.zlatoivan.ru {
+    reverse_proxy localhost:7002
+}
+
+lunda.zlatoivan.ru {
+    reverse_proxy localhost:8000
 }
