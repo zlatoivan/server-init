@@ -80,6 +80,20 @@ function idl
     end
 end
 
+# Скачать только аудио из инсты
+function idla
+    set cookies "$HOME/Documents/Видео/inst/www.instagram.com_cookies.txt"
+    set out "$HOME/Documents/Видео/inst"
+
+    for url in $argv
+        __yt_dlp_with_cookies "$cookies" \
+            -P "$out" \
+            -x --audio-format mp3 --audio-quality 0 \
+            -f "bestaudio/best" \
+            "$url"
+    end
+end
+
 # Посмотреть инфу о видео
 function vinfo --description "Show media info via ffprobe"
     if test (count $argv) -lt 1
