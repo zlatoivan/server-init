@@ -20,6 +20,108 @@ function __yt_dlp_with_cookies
     yt-dlp --cookies-from-browser chrome $argv
 end
 
+function __yt_subtitles_to_txt
+    set cookie_file $argv[1]
+    set transcript_out $argv[2]
+    set -e argv[1]
+    set -e argv[1]
+
+    set subtitles_tmp (mktemp -d)
+
+    __yt_dlp_with_cookies "$cookie_file" \
+        --skip-download \
+        --write-subs \
+        --write-auto-subs \
+        --sub-langs "ru.*,en.*" \
+        --sub-format vtt \
+        --convert-subs vtt \
+        -P "$subtitles_tmp" \
+        --quiet \
+        --no-warnings \
+        $argv
+
+    if test $status -ne 0
+        rm -rf "$subtitles_tmp"
+        return 1
+    end
+
+    set subtitle_file (python3 -c 'import glob
+import os
+import sys
+
+files = glob.glob(os.path.join(sys.argv[1], "*.vtt"))
+print(max(files, key=os.path.getmtime) if files else "")
+' "$subtitles_tmp")
+
+    if test -z "$subtitle_file"
+        rm -rf "$subtitles_tmp"
+        return 1
+    end
+
+    set transcript_file (python3 -c 'import html
+import re
+import sys
+from pathlib import Path
+
+vtt_path = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+
+stem = re.sub(r"\.vtt$", "", vtt_path.name)
+stem = re.sub(r"\.[a-z]{2,3}(?:[-_][A-Za-z0-9]+)?(?:-orig)?$", "", stem)
+txt_path = transcript_out / f"{stem}.txt"
+
+lines = vtt_path.read_text(encoding="utf-8").splitlines()
+result = []
+previous = ""
+
+for line in lines:
+    line = line.strip()
+
+    if not line:
+        continue
+
+    if line == "WEBVTT":
+        continue
+
+    if line.startswith(("Kind:", "Language:", "NOTE")):
+        continue
+
+    if "-->" in line:
+        continue
+
+    if line.isdigit():
+        continue
+
+    line = re.sub(r"<[^>]+>", "", line)
+    line = html.unescape(line).strip()
+
+    if not line:
+        continue
+
+    if line == previous:
+        continue
+
+    result.append(line)
+    previous = line
+
+if not result:
+    sys.exit(1)
+
+txt_path.parent.mkdir(parents=True, exist_ok=True)
+txt_path.write_text(" ".join(result) + "\n", encoding="utf-8")
+print(txt_path)
+' "$subtitle_file" "$transcript_out")
+
+    set status_code $status
+    rm -rf "$subtitles_tmp"
+
+    if test $status_code -ne 0
+        return 1
+    end
+
+    printf '%s\n' "$transcript_file"
+end
+
 # Показать доступные форматы видео
 function ydlf
     set cookies "$HOME/Documents/Видео/yt-dlp/www.youtube.com_cookies.txt"
@@ -110,6 +212,20 @@ function ydlt
     set audio_out "$HOME/Documents/Видео/transcription"
     set transcript_out "$HOME/Documents/Видео/transcription"
 
+    echo "Trying YouTube captions..."
+    set transcript_file (__yt_subtitles_to_txt "$cookies" "$transcript_out" $argv)
+    if test $status -eq 0
+        echo "Transcript from YouTube captions: $transcript_file"
+        echo "Transcript folder: $transcript_out"
+        python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
+        return 0
+    end
+
+    echo "YouTube captions not found, falling back to mlx_whisper..."
     echo "Downloading audio..."
     set audio_file (__yt_dlp_with_cookies "$cookies" \
         -P "$audio_out" \
