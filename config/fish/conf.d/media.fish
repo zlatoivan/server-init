@@ -219,6 +219,48 @@ print(max(files, key=os.path.getmtime) if files else "")
     txtsummary "$transcript_file"
 end
 
+# Сделать транскрибацию .mov и подготовить саммаризацию в Claude
+function movs
+    if test (count $argv) -lt 1
+        echo "Usage: movs <video.mov>"
+        return 2
+    end
+
+    set video_file $argv[1]
+    set transcript_out "$HOME/Documents/Видео/transcription"
+
+    if not test -f "$video_file"
+        echo "Video file not found: $video_file" >&2
+        return 1
+    end
+
+    set transcript_file (python3 -c 'from pathlib import Path
+import sys
+
+video_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+print(transcript_out / video_file.with_suffix(".txt").name)
+' "$video_file" "$transcript_out")
+
+    if test -f "$transcript_file"
+        echo "Transcript already exists: $transcript_file"
+        touch "$transcript_file"
+    else
+        mlx_whisper "$video_file" \
+            --model mlx-community/whisper-large-v3-turbo \
+            --language ru \
+            --output-dir "$transcript_out" \
+            --output-format txt
+
+        if test $status -ne 0
+            echo "mlx_whisper failed"
+            return 1
+        end
+    end
+
+    txtsummary "$transcript_file"
+end
+
 # Сделать конспект транскрипции через OpenAI
 function ydlsa
     if test (count $argv) -lt 1
