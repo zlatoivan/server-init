@@ -110,6 +110,7 @@ function ydlt
     set audio_out "$HOME/Documents/Видео/transcription"
     set transcript_out "$HOME/Documents/Видео/transcription"
 
+    echo "Downloading audio..."
     set audio_file (__yt_dlp_with_cookies "$cookies" \
         -P "$audio_out" \
         -f "140/bestaudio[ext=m4a]/bestaudio" \
@@ -148,6 +149,7 @@ print(Path(sys.argv[1]).as_uri())
         return 0
     end
 
+    echo "Transcribing audio..."
     mlx_whisper "$audio_file" \
         --model mlx-community/whisper-large-v3-turbo \
         --language ru \
@@ -184,6 +186,7 @@ function txtsummary
         return 1
     end
 
+    echo "Preparing Claude prompt..."
     begin
         echo "Саммаризируй материал:"
         echo
@@ -203,6 +206,7 @@ function ydls
         return 1
     end
 
+    echo "Finding transcript..."
     set transcript_file (python3 -c 'import glob
 import os
 import sys
@@ -246,6 +250,7 @@ print(transcript_out / video_file.with_suffix(".txt").name)
         echo "Transcript already exists: $transcript_file"
         touch "$transcript_file"
     else
+        echo "Transcribing video..."
         mlx_whisper "$video_file" \
             --model mlx-community/whisper-large-v3-turbo \
             --language ru \
@@ -280,6 +285,7 @@ function ydlsa
         return 1
     end
 
+    echo "Finding transcript..."
     set transcript_file (python3 -c 'import glob
 import os
 import sys
@@ -303,6 +309,7 @@ print(max(files, key=os.path.getmtime) if files else "")
         set output_file "$transcript_file.summary.md"
     end
 
+    echo "Sending transcript to OpenAI..."
     python3 -c '
 import json
 import os
