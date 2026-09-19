@@ -32,7 +32,7 @@ function __yt_subtitles_to_txt
         --skip-download \
         --write-subs \
         --write-auto-subs \
-        --sub-langs "ru.*,en.*" \
+        --sub-langs "ru.*,ru,en.*" \
         --sub-format vtt \
         --convert-subs vtt \
         -P "$subtitles_tmp" \
@@ -212,9 +212,55 @@ function ydlt
     set audio_out "$HOME/Documents/Видео/transcription"
     set transcript_out "$HOME/Documents/Видео/transcription"
 
-    echo "Trying YouTube captions..."
-    set transcript_file (__yt_subtitles_to_txt "$cookies" "$transcript_out" $argv)
+    # Вычисляем будущий путь транскрипции без скачивания аудио.
+    echo "Resolving transcript path..."
+    set audio_file (__yt_dlp_with_cookies "$cookies" \
+        -P "$audio_out" \
+        -f "140/bestaudio[ext=m4a]/bestaudio" \
+        --quiet \
+        --no-warnings \
+        --simulate \
+        --print after_move:filepath \
+        $argv)
+
+    if test $status -ne 0
+        echo "yt-dlp failed"
+        return 1
+    end
+
+    set transcript_file (python3 -c 'from pathlib import Path
+import sys
+
+audio_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+print(transcript_out / audio_file.with_suffix(".txt").name)
+' "$audio_file" "$transcript_out")
+
+    # Если транскрипция уже есть, пропускаем субтитры, скачивание и mlx_whisper.
+    if test -f "$transcript_file"
+        echo "Transcript already exists: $transcript_file"
+        if test -f "$audio_file"
+            rm "$audio_file"
+        end
+
+        touch "$transcript_file"
+        echo "Transcript folder: $transcript_out"
+        python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
+        return 0
+    end
+
+    # Сначала пробуем готовые русские субтитры YouTube.
+    echo "Trying Russian YouTube captions..."
+    set subtitles_transcript_file (__yt_subtitles_to_txt "$cookies" "$transcript_out" $argv)
     if test $status -eq 0
+        if test "$subtitles_transcript_file" != "$transcript_file"
+            mv "$subtitles_transcript_file" "$transcript_file"
+        end
+
         echo "Transcript from YouTube captions: $transcript_file"
         echo "Transcript folder: $transcript_out"
         python3 -c 'from pathlib import Path
@@ -225,7 +271,9 @@ print(Path(sys.argv[1]).as_uri())
         return 0
     end
 
-    echo "YouTube captions not found, falling back to mlx_whisper..."
+    echo "Russian YouTube captions not found, falling back to mlx_whisper..."
+
+    # Если субтитров нет, скачиваем только аудио для локальной транскрибации.
     echo "Downloading audio..."
     set audio_file (__yt_dlp_with_cookies "$cookies" \
         -P "$audio_out" \
@@ -249,6 +297,7 @@ transcript_out = Path(sys.argv[2])
 print(transcript_out / audio_file.with_suffix(".txt").name)
 ' "$audio_file" "$transcript_out")
 
+    # Повторно проверяем транскрипцию: реальный путь аудио может отличаться от simulated-пути.
     if test -f "$transcript_file"
         echo "Transcript already exists: $transcript_file"
         if test -f "$audio_file"
@@ -265,6 +314,7 @@ print(Path(sys.argv[1]).as_uri())
         return 0
     end
 
+    # Транскрибируем аудио и после успешной транскрибации удаляем промежуточный файл.
     echo "Transcribing audio..."
     mlx_whisper "$audio_file" \
         --model mlx-community/whisper-large-v3-turbo \
@@ -362,20 +412,115 @@ transcript_out = Path(sys.argv[2])
 print(transcript_out / video_file.with_suffix(".txt").name)
 ' "$video_file" "$transcript_out")
 
-    if test -f "$transcript_file"
+    set audio_file (python3 -c 'from pathlib import Path
+import sys
+
+video_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+print(transcript_out / video_file.with_suffix(".m4a").name)
+' "$video_file" "$transcript_out")
+
+    # Проверка, что если уже есть транскрибация, то не транскрибируем
+    set existing_transcript_file (python3 -c 'import re
+import sys
+from pathlib import Path
+
+video_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+transcript_file = transcript_out / video_file.with_suffix(".txt").name
+
+candidates = [transcript_file]
+stripped_stem = re.sub(r"\s*\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}$", "", video_file.stem)
+if stripped_stem != video_file.stem:
+    candidates.append(transcript_out / f"{stripped_stem}.txt")
+
+for candidate in candidates:
+    if candidate.is_file():
+        print(candidate)
+        break
+' "$video_file" "$transcript_out")
+
+    if test -n "$existing_transcript_file"
+        if test "$existing_transcript_file" != "$transcript_file"
+            mv "$existing_transcript_file" "$transcript_file"
+        end
+
         echo "Transcript already exists: $transcript_file"
+        if test -f "$audio_file"
+            rm "$audio_file"
+        end
+
         touch "$transcript_file"
     else
-        echo "Transcribing video..."
-        mlx_whisper "$video_file" \
+        mkdir -p "$transcript_out"
+
+        set remove_audio_after_transcribe 0
+
+        if test -f "$audio_file"
+            echo "Audio already exists: $audio_file"
+        else
+            echo "Extracting audio..."
+            ffmpeg -hide_banner -loglevel error -y \
+                -i "$video_file" \
+                -map 0:a:0 \
+                -vn \
+                -ac 1 \
+                -ar 16000 \
+                -c:a aac \
+                -b:a 64k \
+                "$audio_file"
+
+            if test $status -ne 0
+                echo "ffmpeg failed"
+                return 1
+            end
+
+            set remove_audio_after_transcribe 1
+        end
+
+        echo "Transcribing audio..."
+        set transcribe_started_at (date +%s)
+        mlx_whisper "$audio_file" \
             --model mlx-community/whisper-large-v3-turbo \
             --language ru \
             --output-dir "$transcript_out" \
             --output-format txt
 
-        if test $status -ne 0
+        set transcribe_status $status
+
+        if test $transcribe_status -ne 0
             echo "mlx_whisper failed"
             return 1
+        end
+
+# Проверка, что если у файла 'XXX_2026-09-19 14-48-35.m4a' транскрипция получилась 'XXX.txt', то искать самый свежий файл.
+# TODO: кажется, не работает. И вообще хотелось бы, чтоб такого не было
+        if not test -f "$transcript_file"
+            echo "Finding generated transcript..."
+            set generated_transcript_file (python3 -c 'import glob
+import os
+import sys
+
+transcript_out = sys.argv[1]
+started_at = float(sys.argv[2])
+files = [
+    path
+    for path in glob.glob(os.path.join(transcript_out, "*.txt"))
+    if os.path.getmtime(path) >= started_at
+]
+print(max(files, key=os.path.getmtime) if files else "")
+' "$transcript_out" "$transcribe_started_at")
+
+            if test -z "$generated_transcript_file"
+                echo "Transcript file not found: $transcript_file" >&2
+                return 1
+            end
+
+            mv "$generated_transcript_file" "$transcript_file"
+        end
+
+        if test $remove_audio_after_transcribe -eq 1
+            rm "$audio_file"
         end
     end
 
