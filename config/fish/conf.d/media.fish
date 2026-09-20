@@ -339,6 +339,122 @@ print(Path(sys.argv[1]).as_uri())
 ' "$transcript_out"
 end
 
+# Скачать аудио из инсты и сделать транскрибацию
+function idlt
+    set cookies "$HOME/Documents/Видео/inst/www.instagram.com_cookies.txt"
+    set audio_out "$HOME/Documents/Видео/transcription"
+    set transcript_out "$HOME/Documents/Видео/transcription"
+
+    # Вычисляем будущий путь транскрипции без скачивания аудио.
+    echo "Resolving transcript path..."
+    set audio_file (__yt_dlp_with_cookies "$cookies" \
+        -P "$audio_out" \
+        -f "bestaudio/best" \
+        --quiet \
+        --no-warnings \
+        --simulate \
+        --print filename \
+        $argv)
+
+    if test $status -ne 0
+        echo "yt-dlp failed"
+        return 1
+    end
+
+    if test -n "$audio_file"
+        set transcript_file (python3 -c 'from pathlib import Path
+import sys
+
+audio_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+print(transcript_out / audio_file.with_suffix(".txt").name)
+' "$audio_file" "$transcript_out")
+
+        # Если транскрипция уже есть, пропускаем скачивание и mlx_whisper.
+        if test -f "$transcript_file"
+            echo "Transcript already exists: $transcript_file"
+            if test -f "$audio_file"
+                rm "$audio_file"
+            end
+
+            touch "$transcript_file"
+            echo "Transcript folder: $transcript_out"
+            python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
+            return 0
+        end
+    else
+        echo "Transcript path was not resolved before download."
+    end
+
+    echo "Downloading audio..."
+    set audio_file (__yt_dlp_with_cookies "$cookies" \
+        -P "$audio_out" \
+        -x --audio-format mp3 --audio-quality 0 \
+        -f "bestaudio/best" \
+        --quiet \
+        --no-warnings \
+        --no-simulate \
+        --print after_move:filepath \
+        $argv)
+
+    if test $status -ne 0
+        echo "yt-dlp failed"
+        return 1
+    end
+
+    set transcript_file (python3 -c 'from pathlib import Path
+import sys
+
+audio_file = Path(sys.argv[1])
+transcript_out = Path(sys.argv[2])
+print(transcript_out / audio_file.with_suffix(".txt").name)
+' "$audio_file" "$transcript_out")
+
+    # Повторно проверяем транскрипцию: реальный путь аудио может отличаться от simulated-пути.
+    if test -f "$transcript_file"
+        echo "Transcript already exists: $transcript_file"
+        if test -f "$audio_file"
+            rm "$audio_file"
+        end
+
+        touch "$transcript_file"
+        echo "Transcript folder: $transcript_out"
+        python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
+        return 0
+    end
+
+    echo "Transcribing audio..."
+    mlx_whisper "$audio_file" \
+        --model mlx-community/whisper-large-v3-turbo \
+        --language ru \
+        --output-dir "$transcript_out" \
+        --output-format txt
+
+    if test $status -ne 0
+        echo "mlx_whisper failed"
+        return 1
+    end
+
+    if test -f "$audio_file"
+        rm "$audio_file"
+    end
+
+    echo "Transcript folder: $transcript_out"
+    python3 -c 'from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).as_uri())
+' "$transcript_out"
+end
+
 function txtsummary
     if test (count $argv) -lt 1
         echo "Usage: txtsummary <transcript.txt>"
@@ -368,6 +484,32 @@ function ydls
     set transcript_out "$HOME/Documents/Видео/transcription"
 
     ydlt $argv
+    if test $status -ne 0
+        return 1
+    end
+
+    echo "Finding transcript..."
+    set transcript_file (python3 -c 'import glob
+import os
+import sys
+
+files = glob.glob(os.path.join(sys.argv[1], "*.txt"))
+print(max(files, key=os.path.getmtime) if files else "")
+' "$transcript_out")
+
+    if test -z "$transcript_file"
+        echo "Transcript file not found in $transcript_out" >&2
+        return 1
+    end
+
+    txtsummary "$transcript_file"
+end
+
+# Скачать аудио из инсты, сделать транскрибацию и подготовить саммаризацию в Claude
+function idls
+    set transcript_out "$HOME/Documents/Видео/transcription"
+
+    idlt $argv
     if test $status -ne 0
         return 1
     end
