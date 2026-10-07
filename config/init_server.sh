@@ -19,6 +19,10 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo 
 sudo apt update
 sudo apt install -y neovim golang-go make fish docker-ce caddy docker-compose-plugin
 
+# cron
+sudo mkdir -p /etc/cron.d
+sudo rsync -a ~/server-init/config/cron.d/docker-cleanup /etc/cron.d/docker-cleanup
+
 # go
 mkdir -p $HOME/go/bin
 
