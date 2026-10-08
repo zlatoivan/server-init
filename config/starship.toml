@@ -1,14 +1,21 @@
 [line_break]
 disabled = true
 
+[username]
+# По умолчанию Starship скрывает пользователей, кроме root; включаем всегда для ясности
+show_always = true
+format = "[$user]($style) in "
+
+[hostname]
+# Показываем имя сервера всегда, даже после su - user, когда SSH-переменные могут пропасть
+ssh_only = false
+format = "[ $hostname]($style) in "
+
 [directory]
 read_only = " 󰌾"
 
 [git_branch]
 symbol = " "
-
-[hostname]
-ssh_symbol = " "
 
 
 [golang]
