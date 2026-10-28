@@ -1,0 +1,398 @@
+# Starship для Mac: пресет nerd-font-symbols, включены только directory, git_branch и os.symbols
+"$schema" = 'https://starship.rs/config-schema.json'
+
+[aws]
+disabled = true
+symbol = " "
+
+[azure]
+disabled = true
+symbol = " "
+
+[battery]
+disabled = true
+full_symbol = "󰁹 "
+charging_symbol = "󰂄 "
+discharging_symbol = "󰂃 "
+unknown_symbol = "󰂑 "
+empty_symbol = "󰂎 "
+
+[buf]
+disabled = true
+symbol = " "
+
+[bun]
+disabled = true
+symbol = " "
+
+[c]
+disabled = true
+symbol = " "
+
+[cpp]
+disabled = true
+symbol = " "
+
+[cmake]
+disabled = true
+symbol = " "
+
+[cobol]
+disabled = true
+symbol = " "
+
+[conda]
+disabled = true
+symbol = " "
+
+[container]
+disabled = true
+symbol = " "
+
+[crystal]
+disabled = true
+symbol = " "
+
+[dart]
+disabled = true
+symbol = " "
+
+[deno]
+disabled = true
+symbol = " "
+
+[direnv]
+disabled = true
+symbol = " "
+
+[directory]
+read_only = " 󰌾"
+
+[docker_context]
+disabled = true
+symbol = " "
+
+[dotnet]
+disabled = true
+symbol = " "
+
+[elixir]
+disabled = true
+symbol = " "
+
+[elm]
+disabled = true
+symbol = " "
+
+[erlang]
+disabled = true
+symbol = " "
+
+[fennel]
+disabled = true
+symbol = " "
+
+[fortran]
+disabled = true
+symbol = " "
+
+[fossil_branch]
+disabled = true
+symbol = " "
+
+[gcloud]
+disabled = true
+symbol = "󱇶 "
+
+[gleam]
+disabled = true
+symbol = " "
+
+[git_branch]
+symbol = " "
+
+[git_commit]
+disabled = true
+tag_symbol = '  '
+
+[golang]
+disabled = true
+symbol = " "
+
+[gradle]
+disabled = true
+symbol = " "
+
+[guix_shell]
+disabled = true
+symbol = " "
+
+[haskell]
+disabled = true
+symbol = " "
+
+[haxe]
+disabled = true
+symbol = " "
+
+[helm]
+disabled = true
+symbol = " "
+
+[hg_branch]
+disabled = true
+symbol = " "
+
+[hostname]
+disabled = true
+ssh_symbol = " "
+
+[java]
+disabled = true
+symbol = " "
+
+[jj_bookmark]
+disabled = true
+symbol = " "
+
+[julia]
+disabled = true
+symbol = " "
+
+[kotlin]
+disabled = true
+symbol = " "
+
+[kubernetes]
+disabled = true
+symbol = "󱃾 "
+
+[lua]
+disabled = true
+symbol = " "
+
+[maven]
+disabled = true
+symbol = " "
+
+[memory_usage]
+disabled = true
+symbol = "󰍛 "
+
+[meson]
+disabled = true
+symbol = "󰔷 "
+
+[mojo]
+disabled = true
+symbol = "󰈸 "
+
+[nats]
+disabled = true
+symbol = " "
+
+[netns]
+disabled = true
+symbol = "󰛳 "
+
+[nim]
+disabled = true
+symbol = " "
+
+[nix_shell]
+disabled = true
+symbol = " "
+
+[nodejs]
+disabled = true
+symbol = " "
+
+[ocaml]
+disabled = true
+symbol = " "
+
+[odin]
+disabled = true
+symbol = "󰟢 "
+
+[opa]
+disabled = true
+symbol = " "
+
+[openstack]
+disabled = true
+symbol = " "
+
+[os.symbols]
+AIX = " "
+AlmaLinux = " "
+Alpaquita = " "
+Alpine = " "
+ALTLinux = " "
+Amazon = " "
+Android = " "
+AOSC = " "
+Arch = " "
+Artix = " "
+Bazzite = " "
+Bluefin = " "
+CachyOS = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Elementary = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = " "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Hurd = " "
+Illumos = " "
+InstantOS = " "
+Ios = "󰀷 "
+Kali = " "
+KDENeon = " "
+Linux = " "
+Mabox = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+Nobara = " "
+OpenBSD = " "
+OpenCloudOS = " "
+openEuler = " "
+openSUSE = " "
+OracleLinux = "󰺡 "
+PikaOS = " "
+Pop = " "
+Raspbian = " "
+Redhat = "󱄛 "
+RedHatEnterprise = "󱄛 "
+Redox = "󰀘 "
+RockyLinux = " "
+Solus = " "
+SUSE = " "
+Ubuntu = " "
+Ultramarine = " "
+Unknown = " "
+Uos = " "
+Void = " "
+Windows = "󰍲 "
+Zorin = " "
+
+[package]
+disabled = true
+symbol = "󰏗 "
+
+[perl]
+disabled = true
+symbol = " "
+
+[php]
+disabled = true
+symbol = " "
+
+[pijul_channel]
+disabled = true
+symbol = " "
+
+[pixi]
+disabled = true
+symbol = "󰏗 "
+
+[pulumi]
+disabled = true
+symbol = " "
+
+[purescript]
+disabled = true
+symbol = " "
+
+[python]
+disabled = true
+symbol = " "
+
+[raku]
+disabled = true
+symbol = "󱖊 "
+
+[red]
+disabled = true
+symbol = "󱍼 "
+
+[rlang]
+disabled = true
+symbol = "󰟔 "
+
+[ruby]
+disabled = true
+symbol = " "
+
+[rust]
+disabled = true
+symbol = "󱘗 "
+
+[scala]
+disabled = true
+symbol = " "
+
+[shlvl]
+disabled = true
+symbol = "󰹍 "
+
+[singularity]
+disabled = true
+symbol = " "
+
+[solidity]
+disabled = true
+symbol = " "
+
+[spack]
+disabled = true
+symbol = " "
+
+[status]
+disabled = true
+symbol = " "
+
+[sudo]
+disabled = true
+symbol = " "
+
+[swift]
+disabled = true
+symbol = " "
+
+[terraform]
+disabled = true
+symbol = " "
+
+[vlang]
+disabled = true
+symbol = " "
+
+[typst]
+disabled = true
+symbol = " "
+
+[vagrant]
+disabled = true
+symbol = " "
+
+[xmake]
+disabled = true
+symbol = " "
+
+[zig]
+disabled = true
+symbol = " "
+
+[line_break]
+disabled = true

@@ -34,7 +34,7 @@ chsh -s /usr/bin/fish $USER
 
 # starship
 curl -sS https://starship.rs/install.sh | sh -s -- -y
-rsync -a ~/server-init/config/starship/starship.toml ~/.config/starship.toml
+rsync -a ~/server-init/config/starship/server.toml ~/.config/starship.toml
 
 # caddy
 rsync -a ~/server-init/config/caddy/Caddyfile /etc/caddy/Caddyfile

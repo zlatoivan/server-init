@@ -100,21 +100,7 @@ setup_terminal() {
 
   # starship: только directory, git_branch и os.symbols
   mkdir -p ~/.config
-  starship preset nerd-font-symbols -o "$TMP_DIR/starship.toml"
-  awk '
-    { print }
-    /^\[[^]]+\]$/ {
-      name = substr($0, 2, length($0) - 2)
-      if (name != "directory" && name != "git_branch" && name != "os.symbols") {
-        print "disabled = true"
-      }
-    }
-  ' "$TMP_DIR/starship.toml" > ~/.config/starship.toml
-
-  # Убрать перенос строки перед приглашением (если секции ещё нет)
-  if ! grep -q '^\[line_break\]' ~/.config/starship.toml; then
-    printf '\n[line_break]\ndisabled = true\n' >> ~/.config/starship.toml
-  fi
+  cp "$DIR/starship/mac.toml" ~/.config/starship.toml
 
   # git: задаём имя и почту, только если они ещё не заданы
   # (чтобы не перезаписать рабочие настройки на корпоративном Mac)

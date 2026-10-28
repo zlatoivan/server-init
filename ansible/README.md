@@ -33,7 +33,7 @@ ansible-playbook -i inventory.ini init_server.yml -u ubuntu --extra-vars "target
 
 Заметки
 
-- Конфиги берутся из репозитория: `../config/config.fish`, `../config/starship/starship.toml`, `../config/caddy/Caddyfile`.
+- Конфиги берутся из репозитория: `../config/config.fish`, `../config/starship/server.toml`, `../config/caddy/Caddyfile`.
 - Если нужен иной домен/бекенд — измените `../config/caddy/Caddyfile` перед запуском.
 - Скрипт запуска `fish` в конце из shell‑версии не переносится (Ansible не интерактивен).
 *** End Patch```}endphp.язан
