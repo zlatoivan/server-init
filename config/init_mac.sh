@@ -188,6 +188,66 @@ setup_finder() {
 }
 
 ########################################
+# 5. GoLand
+########################################
+setup_goland() {
+  local app="/Applications/GoLand.app"
+  if [ ! -d "$app" ]; then
+    echo "GoLand не установлен"
+    return 1
+  fi
+  if ps -axo comm= | grep -qx "$app/Contents/MacOS/goland"; then
+    echo "Закройте GoLand и запустите раздел заново: иначе он перезапишет настройки при выходе"
+    return 1
+  fi
+
+  # Папка настроек текущей версии, например GoLand2026.2 (создаётся и до первого запуска)
+  local name
+  name="$(plutil -extract dataDirectoryName raw "$app/Contents/Resources/product-info.json")"
+  local options="$HOME/Library/Application Support/JetBrains/$name/options"
+  mkdir -p "$options"
+
+  # Меняем только нужные параметры, остальное в файлах не трогаем
+  goland_set "$options/laf.xml" LafManager '<laf ' '<laf themeId="Islands Darcula" />'
+
+  goland_option "$options/editor-font.xml" DefaultFont VERSION 1
+  goland_option "$options/editor-font.xml" DefaultFont FONT_SIZE 12
+  goland_option "$options/editor-font.xml" DefaultFont FONT_SIZE_2D 12.0
+  goland_option "$options/editor-font.xml" DefaultFont LINE_SPACING 1.1
+
+  goland_option "$options/terminal-local.xml" TerminalLocalOptions shellPath "$FISH_PATH"
+  goland_option "$options/terminal.xml" TerminalOptionsProvider terminalEngine CLASSIC
+  goland_option "$options/terminal-font.xml" TerminalFontOptions VERSION 1
+  goland_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE 12
+  goland_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE_2D 12.0
+}
+
+# goland_option <файл> <component> <имя> <значение> — задаёт <option name="..." value="..." />
+goland_option() {
+  goland_set "$1" "$2" "<option name=\"$3\"" "<option name=\"$3\" value=\"$4\" />"
+}
+
+# goland_set <файл> <component> <начало строки> <строка целиком>
+# Заменяет строку внутри component (или добавляет её); недостающие файл и component создаёт.
+goland_set() {
+  local file="$1" component="$2" key="$3" line="$4"
+  grep -q '</application>' "$file" 2>/dev/null || printf '<application>\n</application>\n' > "$file"
+  awk -v comp="<component name=\"$component\"" -v key="$key" -v line="$line" '
+    index($0, comp) {
+      found = 1
+      if ($0 ~ /\/>[[:space:]]*$/) {   # пустой <component ... />
+        sub(/[[:space:]]*\/>[[:space:]]*$/, ">"); print; print "    " line; print "  </component>"; next
+      }
+      inside = 1; print; next
+    }
+    inside && index($0, key) { print "    " line; done = 1; next }
+    inside && /<\/component>/ { if (!done) print "    " line; inside = 0 }
+    /<\/application>/ && !found { print "  " comp ">"; print "    " line; print "  </component>" }
+    { print }
+  ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+}
+
+########################################
 # Запуск
 ########################################
 
@@ -200,6 +260,7 @@ run "Программы (Homebrew + Brewfile)" install_apps
 run "Терминал (Dracula, fish, starship, git)" setup_terminal
 run "Система" setup_macos
 run "Finder" setup_finder
+run "GoLand" setup_goland
 
 killall Finder Dock ControlCenter SystemUIServer 2>/dev/null
 
@@ -224,7 +285,8 @@ cat <<'EOF'
   Finder
   - Боковое меню
   Программы
-  - GoLand: включить Settings Sync
+  - GoLand: проверить Soft Wrap для .md, Code Style → Go → «Move all imports to a single declaration»,
+    Actions on Save → «Reformat code» и «Optimize imports»
   - Настройки OBS
   - Wispr Flow: войти, выдать доступ к микрофону и «Универсальному доступу»
 EOF
