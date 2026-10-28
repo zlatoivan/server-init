@@ -78,6 +78,9 @@ setup_terminal() {
   sleep 2
   defaults write com.apple.Terminal "Default Window Settings" -string "Dracula"
   defaults write com.apple.Terminal "Startup Window Settings" -string "Dracula"
+  # Шрифт с иконками для starship (ставится из Brewfile)
+  osascript -e 'tell application "Terminal" to set font name of settings set "Dracula" to "FiraMonoNFM-Regular"' \
+    || echo "  ! Шрифт профиля Dracula поставьте вручную: FiraMono Nerd Font Mono"
 
   # fish как оболочка по умолчанию
   if ! grep -qx "$FISH_PATH" /etc/shells; then
@@ -204,7 +207,6 @@ cat <<'EOF'
   - Боковое меню
   Терминал
   - Проверить, что профиль Dracula выбран по умолчанию
-  - Шрифт профиля Dracula → FiraMono Nerd Font Mono
   - Option как метаклавиша
   Программы
   - SingularityApp из App Store
