@@ -188,16 +188,18 @@ setup_finder() {
 }
 
 ########################################
-# 5. GoLand
+# 5. IDE от JetBrains: GoLand, PyCharm
 ########################################
-setup_goland() {
-  local app="/Applications/GoLand.app"
+# setup_jetbrains <имя приложения> — одинаковые настройки для любой IDE JetBrains
+setup_jetbrains() {
+  local ide="$1"
+  local app="/Applications/$ide.app"
   if [ ! -d "$app" ]; then
-    echo "GoLand не установлен"
+    echo "$ide не установлен"
     return 1
   fi
-  if ps -axo comm= | grep -qx "$app/Contents/MacOS/goland"; then
-    echo "Закройте GoLand и запустите раздел заново: иначе он перезапишет настройки при выходе"
+  if ps -axo comm= | grep -q "^$app/Contents/MacOS/"; then
+    echo "Закройте $ide и запустите раздел заново: иначе он перезапишет настройки при выходе"
     return 1
   fi
 
@@ -208,28 +210,28 @@ setup_goland() {
   mkdir -p "$options"
 
   # Меняем только нужные параметры, остальное в файлах не трогаем
-  goland_set "$options/laf.xml" LafManager '<laf ' '<laf themeId="Islands Darcula" />'
+  jetbrains_set "$options/laf.xml" LafManager '<laf ' '<laf themeId="Islands Darcula" />'
 
-  goland_option "$options/editor-font.xml" DefaultFont VERSION 1
-  goland_option "$options/editor-font.xml" DefaultFont FONT_SIZE 12
-  goland_option "$options/editor-font.xml" DefaultFont FONT_SIZE_2D 12.0
-  goland_option "$options/editor-font.xml" DefaultFont LINE_SPACING 1.1
+  jetbrains_option "$options/editor-font.xml" DefaultFont VERSION 1
+  jetbrains_option "$options/editor-font.xml" DefaultFont FONT_SIZE 12
+  jetbrains_option "$options/editor-font.xml" DefaultFont FONT_SIZE_2D 12.0
+  jetbrains_option "$options/editor-font.xml" DefaultFont LINE_SPACING 1.1
 
-  goland_option "$options/terminal-local.xml" TerminalLocalOptions shellPath "$FISH_PATH"
-  goland_option "$options/terminal.xml" TerminalOptionsProvider terminalEngine CLASSIC
-  goland_option "$options/terminal-font.xml" TerminalFontOptions VERSION 1
-  goland_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE 12
-  goland_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE_2D 12.0
+  jetbrains_option "$options/terminal-local.xml" TerminalLocalOptions shellPath "$FISH_PATH"
+  jetbrains_option "$options/terminal.xml" TerminalOptionsProvider terminalEngine CLASSIC
+  jetbrains_option "$options/terminal-font.xml" TerminalFontOptions VERSION 1
+  jetbrains_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE 12
+  jetbrains_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE_2D 12.0
 }
 
-# goland_option <файл> <component> <имя> <значение> — задаёт <option name="..." value="..." />
-goland_option() {
-  goland_set "$1" "$2" "<option name=\"$3\"" "<option name=\"$3\" value=\"$4\" />"
+# jetbrains_option <файл> <component> <имя> <значение> — задаёт <option name="..." value="..." />
+jetbrains_option() {
+  jetbrains_set "$1" "$2" "<option name=\"$3\"" "<option name=\"$3\" value=\"$4\" />"
 }
 
-# goland_set <файл> <component> <начало строки> <строка целиком>
+# jetbrains_set <файл> <component> <начало строки> <строка целиком>
 # Заменяет строку внутри component (или добавляет её); недостающие файл и component создаёт.
-goland_set() {
+jetbrains_set() {
   local file="$1" component="$2" key="$3" line="$4"
   grep -q '</application>' "$file" 2>/dev/null || printf '<application>\n</application>\n' > "$file"
   awk -v comp="<component name=\"$component\"" -v key="$key" -v line="$line" '
@@ -260,7 +262,8 @@ run "Программы (Homebrew + Brewfile)" install_apps
 run "Терминал (Dracula, fish, starship, git)" setup_terminal
 run "Система" setup_macos
 run "Finder" setup_finder
-run "GoLand" setup_goland
+run "GoLand" setup_jetbrains GoLand
+run "PyCharm" setup_jetbrains PyCharm
 
 killall Finder Dock ControlCenter SystemUIServer 2>/dev/null
 
