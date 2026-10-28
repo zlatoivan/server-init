@@ -1,0 +1,63 @@
+# Список программ для установки через Homebrew.
+# Ставится командой: brew bundle --file=Brewfile
+
+# Консольные утилиты
+brew "fish"
+brew "starship"
+brew "neovim"
+brew "go"
+brew "grpc"
+brew "golangci-lint"
+brew "yt-dlp"
+brew "ffmpeg"
+brew "mermaid-cli"
+brew "htop"
+brew "tmux"
+brew "ripgrep"
+brew "watch"
+brew "git" # свежее, чем от Apple
+
+# Docker через colima (вместо Docker Desktop)
+brew "lima"
+brew "colima"
+brew "docker"
+brew "docker-compose"
+brew "docker-credential-helper"
+brew "docker-buildx"
+# Если нужен Docker Desktop, раскомментируйте строку ниже и закомментируйте блок выше
+# cask "docker"
+
+# Приложения
+cask "obsidian"
+cask "google-chrome"
+cask "telegram"
+cask "whatsapp"
+cask "vlc"
+cask "obs"
+cask "daisydisk"
+cask "imazing"
+cask "goland"
+cask "pycharm"
+cask "claude-code"
+
+# Шрифт для starship (без лигатур, в отличие от FiraCode)
+cask "font-fira-mono-nerd-font"
+
+# Для разработкиы
+
+# Go / gRPC
+brew "protobuf"
+brew "buf"
+brew "grpcurl"
+go "golang.org/x/tools/cmd/goimports"
+go "golang.org/x/tools/gopls"
+go "honnef.co/go/tools/cmd/staticcheck"
+go "github.com/golang/mock/mockgen"
+go "github.com/pressly/goose/v3/cmd/goose"
+
+# По необходимости
+brew "kubernetes-cli"
+brew "libpq"          # psql без полноценного сервера Postgres
+brew "node"
+brew "gnupg"
+brew "pinentry-mac"   # если подписываете коммиты GPG
