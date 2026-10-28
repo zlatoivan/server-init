@@ -4,6 +4,7 @@
 # Консольные утилиты
 brew "fish"
 brew "starship"
+brew "mas"            # установка из App Store (нужен вход в App Store)
 brew "neovim"
 brew "go"
 brew "grpc"
@@ -61,3 +62,6 @@ brew "libpq"          # psql без полноценного сервера Post
 brew "node"
 brew "gnupg"
 brew "pinentry-mac"   # если подписываете коммиты GPG
+
+# App Store
+mas "Сингулярити", id: 1481535767

@@ -71,16 +71,28 @@ install_apps() {
 setup_terminal() {
   eval "$(/opt/homebrew/bin/brew shellenv)"
 
-  # Тема Dracula для Терминала
+  # Тема Dracula для Терминала, Option — метаклавиша
   curl -fsSL -o "$TMP_DIR/Dracula.terminal" \
     https://raw.githubusercontent.com/dracula/terminal-app/master/Dracula.terminal
+  plutil -replace useOptionAsMetaKey -bool true "$TMP_DIR/Dracula.terminal"
   open "$TMP_DIR/Dracula.terminal"   # импортирует профиль в Терминал
   sleep 2
-  defaults write com.apple.Terminal "Default Window Settings" -string "Dracula"
-  defaults write com.apple.Terminal "Startup Window Settings" -string "Dracula"
-  # Шрифт с иконками для starship (ставится из Brewfile)
-  osascript -e 'tell application "Terminal" to set font name of settings set "Dracula" to "FiraMonoNFM-Regular"' \
-    || echo "  ! Шрифт профиля Dracula поставьте вручную: FiraMono Nerd Font Mono"
+
+  # Шрифт с иконками для starship (ставится из Brewfile) и профиль по умолчанию.
+  # Через сам Терминал, а не defaults: иначе он перезапишет настройки при выходе.
+  osascript >/dev/null <<'APPLESCRIPT' || true
+tell application "Terminal"
+  set font name of settings set "Dracula" to "FiraMonoNFM-Regular"
+  set default settings to settings set "Dracula"
+  set startup settings to settings set "Dracula"
+end tell
+APPLESCRIPT
+  if [ "$(osascript -e 'tell application "Terminal" to name of default settings' 2>/dev/null)" != "Dracula" ]; then
+    echo "  ! Профиль Dracula не стал профилем по умолчанию: Терминал → Настройки → Профили"
+  fi
+  if [ "$(osascript -e 'tell application "Terminal" to font name of settings set "Dracula"' 2>/dev/null)" != "FiraMonoNFM-Regular" ]; then
+    echo "  ! Шрифт профиля Dracula поставьте вручную: FiraMono Nerd Font Mono"
+  fi
 
   # fish как оболочка по умолчанию
   if ! grep -qx "$FISH_PATH" /etc/shells; then
@@ -149,6 +161,13 @@ setup_macos() {
   # Скриншоты в отдельную папку
   mkdir -p "$SCREENSHOTS_DIR"
   defaults write com.apple.screencapture location -string "$SCREENSHOTS_DIR"
+
+  # Option+Z — снимок выделенной области в буфер обмена (вместо ⌃⇧⌘4)
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 31 \
+    '<dict><key>enabled</key><true/><key>value</key><dict><key>type</key><string>standard</string>
+     <key>parameters</key><array><integer>122</integer><integer>6</integer><integer>524288</integer></array></dict></dict>'
+  /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u \
+    || echo "  ! Сочетание Option+Z заработает после перезахода в систему"
 }
 
 ########################################
@@ -199,17 +218,12 @@ cat <<'EOF'
   Система
   - Touch ID
   - Автояркость дисплея
-  - Сочетание Option+Z для снимков экрана
   - Ctrl+Option+T для Терминала (приложение «Команды»)
   - Замены текста
   - Отключить сочетание «Короткая заметка»
   Finder
   - Боковое меню
-  Терминал
-  - Проверить, что профиль Dracula выбран по умолчанию
-  - Option как метаклавиша
   Программы
-  - SingularityApp из App Store
   - GoLand: включить Settings Sync
   - Настройки OBS
   - Wispr Flow: войти, выдать доступ к микрофону и «Универсальному доступу»
