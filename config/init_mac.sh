@@ -88,6 +88,12 @@ tell application "Terminal"
   set font name of settings set "Dracula" to "FiraMonoNFM-Regular"
   set default settings to settings set "Dracula"
   set startup settings to settings set "Dracula"
+  -- Профиль по умолчанию действует только на новые окна — применяем его и к уже открытым
+  repeat with w in (get every window)
+    repeat with t in (get every tab of w)
+      set current settings of t to settings set "Dracula"
+    end repeat
+  end repeat
 end tell
 APPLESCRIPT
   if [ "$(osascript -e 'tell application "Terminal" to name of default settings' 2>/dev/null)" != "Dracula" ]; then
