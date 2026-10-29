@@ -117,6 +117,9 @@ APPLESCRIPT
   [ -f ~/.config/fish/config.fish ] && cp ~/.config/fish/config.fish ~/.config/fish/config.fish.bak
   cp -R "$DIR/fish/." ~/.config/fish/
 
+  # PostgreSQL: клиентские утилиты в PATH
+  "$FISH_PATH" -c 'fish_add_path -U (brew --prefix libpq)/bin' || true
+
   # Подсветка ввода в стиле Dracula
   echo y | "$FISH_PATH" -c 'fish_config theme save Dracula' \
     || echo "  ! Тему fish поставьте вручную: fish_config"
