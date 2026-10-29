@@ -110,7 +110,7 @@ APPLESCRIPT
   cp -R "$DIR/fish/." ~/.config/fish/
 
   # Подсветка ввода в стиле Dracula
-  yes | "$FISH_PATH" -c 'fish_config theme save Dracula' >/dev/null 2>&1 \
+  echo y | "$FISH_PATH" -c 'fish_config theme save Dracula' \
     || echo "  ! Тему fish поставьте вручную: fish_config"
 
   # Переменная для mermaid-cli (рендер через установленный Chrome)
@@ -204,7 +204,7 @@ setup_jetbrains() {
     echo "$ide не установлен"
     return 1
   fi
-  if ps -axo comm= | grep -q "^$app/Contents/MacOS/"; then
+  if ps -axo comm= | grep "^$app/Contents/MacOS/" >/dev/null; then
     echo "Закройте $ide и запустите раздел заново: иначе он перезапишет настройки при выходе"
     return 1
   fi
