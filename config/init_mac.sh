@@ -140,8 +140,11 @@ setup_macos() {
   sudo pmset -c displaysleep 10
 
   # Пароль сразу после заставки / выключения дисплея
-  sysadminctl -screenLock immediate -password - 2>/dev/null \
-    || echo "  ! Пароль после заставки: настройте вручную (Экран блокировки)"
+  # Пароль спрашиваем, только если ещё не стоит «Сразу»
+  if ! sysadminctl -screenLock status 2>&1 | grep 'immediate' >/dev/null; then
+    sysadminctl -screenLock immediate -password - 2>/dev/null \
+      || echo "  ! Пароль после заставки: настройте вручную (Экран блокировки)"
+  fi
 
   # Строка меню: процент заряда, без Spotlight, звук всегда
   defaults -currentHost write com.apple.controlcenter BatteryShowPercentage -bool true
