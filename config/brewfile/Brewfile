@@ -40,7 +40,12 @@ cask "imazing"
 cask "goland"
 cask "pycharm"
 cask "jetbrains-toolbox"
-cask "claude-code"
+
+# AI-инструменты
+cask "chatgpt"       # ChatGPT Desktop
+cask "codex"         # OpenAI Codex CLI
+cask "claude"        # Claude Desktop
+cask "claude-code"   # Claude Code CLI
 
 # Шрифт для starship (без лигатур, в отличие от FiraCode)
 cask "font-fira-mono-nerd-font"
