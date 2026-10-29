@@ -209,8 +209,12 @@ setup_jetbrains() {
   local options="$HOME/Library/Application Support/JetBrains/$name/options"
   mkdir -p "$options"
 
+  # Без этого флага при первом запуске IDE «переходит на новый интерфейс» и сбрасывает тему на Islands Dark
+  jetbrains_registry "$options/../early-access-registry.txt" ide.experimental.ui true
+
   # Меняем только нужные параметры, остальное в файлах не трогаем
   jetbrains_set "$options/laf.xml" LafManager '<laf ' '<laf themeId="Islands Darcula" />'
+  jetbrains_set "$options/colors.scheme.xml" EditorColorsManagerImpl '<global_color_scheme ' '<global_color_scheme name="Darcula" />'
 
   jetbrains_option "$options/editor-font.xml" DefaultFont VERSION 1
   jetbrains_option "$options/editor-font.xml" DefaultFont FONT_SIZE 12
@@ -222,6 +226,17 @@ setup_jetbrains() {
   jetbrains_option "$options/terminal-font.xml" TerminalFontOptions VERSION 1
   jetbrains_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE 12
   jetbrains_option "$options/terminal-font.xml" TerminalFontOptions FONT_SIZE_2D 12.0
+}
+
+# jetbrains_registry <файл> <ключ> <значение> — файл из пар строк «ключ», «значение»
+jetbrains_registry() {
+  local file="$1" key="$2" value="$3"
+  touch "$file"
+  awk -v key="$key" -v value="$value" '
+    NR % 2 == 1 { k = $0; print; next }
+    { print (k == key ? value : $0); if (k == key) found = 1 }
+    END { if (!found) { print key; print value } }
+  ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
 }
 
 # jetbrains_option <файл> <component> <имя> <значение> — задаёт <option name="..." value="..." />

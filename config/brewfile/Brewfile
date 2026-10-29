@@ -16,7 +16,7 @@ brew "htop"
 brew "tmux"
 brew "ripgrep"
 brew "watch"
-brew "git" # свежее, чем от Apple
+brew "git"            # свежее, чем от Apple
 
 # Docker через colima (вместо Docker Desktop)
 brew "lima"
