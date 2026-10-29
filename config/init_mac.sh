@@ -71,12 +71,15 @@ install_apps() {
 setup_terminal() {
   eval "$(/opt/homebrew/bin/brew shellenv)"
 
-  # Тема Dracula для Терминала, Option — метаклавиша
-  curl -fsSL -o "$TMP_DIR/Dracula.terminal" \
-    https://raw.githubusercontent.com/dracula/terminal-app/master/Dracula.terminal
-  plutil -replace useOptionAsMetaKey -bool true "$TMP_DIR/Dracula.terminal"
-  open "$TMP_DIR/Dracula.terminal"   # импортирует профиль в Терминал
-  sleep 2
+  # Тема Dracula для Терминала, Option — метаклавиша.
+  # Импортируем только один раз: повторный импорт создаёт «Dracula 1», «Dracula 2»… и открывает окно.
+  if [ "$(osascript -e 'tell application "Terminal" to exists settings set "Dracula"' 2>/dev/null)" != "true" ]; then
+    curl -fsSL -o "$TMP_DIR/Dracula.terminal" \
+      https://raw.githubusercontent.com/dracula/terminal-app/master/Dracula.terminal
+    plutil -replace useOptionAsMetaKey -bool true "$TMP_DIR/Dracula.terminal"
+    open "$TMP_DIR/Dracula.terminal"   # импортирует профиль и открывает с ним окно
+    sleep 2
+  fi
 
   # Шрифт с иконками для starship (ставится из Brewfile) и профиль по умолчанию.
   # Через сам Терминал, а не defaults: иначе он перезапишет настройки при выходе.
