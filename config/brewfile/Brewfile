@@ -39,6 +39,7 @@ cask "daisydisk"
 cask "imazing"
 cask "goland"
 cask "pycharm"
+cask "jetbrains-toolbox"
 cask "claude-code"
 
 # Шрифт для starship (без лигатур, в отличие от FiraCode)

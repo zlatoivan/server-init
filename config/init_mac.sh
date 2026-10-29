@@ -1,7 +1,9 @@
 #!/bin/bash
 # Полная настройка нового Mac: программы, терминал, система, Finder.
-# Запуск: bash init_mac.sh
-#     или bash -c "$(curl -fsSL https://raw.githubusercontent.com/zlatoivan/server-init/main/config/init_mac.sh)"
+# Запуск:
+#                   bash init_mac.sh
+# или               bash -c "$(curl -fsSL https://raw.githubusercontent.com/zlatoivan/server-init/main/config/init_mac.sh)"
+# или без кеша CDN: bash -c "$(curl -fsSL -H 'Accept: application/vnd.github.raw' https://api.github.com/repos/zlatoivan/server-init/contents/config/init_mac.sh)"
 # Файлы рядом со скриптом (fish/, brewfile/) берутся из репозитория; если их нет — скачиваются с GitHub.
 # Чтобы пропустить раздел, закомментируйте его вызов в самом низу файла.
 
