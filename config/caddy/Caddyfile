@@ -8,11 +8,3 @@ zlatoivan.ru {
 summarizer.zlatoivan.ru {
     reverse_proxy localhost:7001
 }
-
-compas.zlatoivan.ru {
-    reverse_proxy localhost:7002
-}
-
-lunda.zlatoivan.ru {
-    reverse_proxy localhost:8000
-}
