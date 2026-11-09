@@ -1,8 +1,24 @@
 #!/bin/sh
+# Запуск: bash -c "$(curl -fsSL https://raw.githubusercontent.com/zlatoivan/server-init/main/config/init_server.sh)"
 
 # important
 sudo apt update
 sudo apt install -y apt-transport-https ca-certificates software-properties-common gnupg lsb-release debian-keyring debian-archive-keyring curl rsync
+
+# Конфиги берём рядом со скриптом; при запуске по ссылке скачиваем репозиторий.
+DIR="$(cd "$(dirname "$0")" && pwd)" || exit 1
+if [ ! -d "$DIR/fish" ]; then
+  TMP_DIR="$(mktemp -d)" || exit 1
+  trap 'rm -rf "$TMP_DIR"' EXIT
+  echo "Скачиваю файлы репозитория..."
+  if ! curl -fsSL -o "$TMP_DIR/repository.tar.gz" \
+    https://github.com/zlatoivan/server-init/archive/refs/heads/main.tar.gz \
+    || ! tar -xzf "$TMP_DIR/repository.tar.gz" -C "$TMP_DIR"; then
+    echo "Не удалось скачать или распаковать репозиторий"
+    exit 1
+  fi
+  DIR="$TMP_DIR/server-init-main/config"
+fi
 
 # repositories
 sudo add-apt-repository -y ppa:neovim-ppa/stable # nvim
@@ -21,23 +37,23 @@ sudo apt install -y neovim golang-go make fish docker-ce caddy docker-compose-pl
 
 # cron
 sudo mkdir -p /etc/cron.d
-sudo rsync -a ~/server-init/config/cron.d/docker-cleanup /etc/cron.d/docker-cleanup
+sudo rsync -a "$DIR/cron.d/docker-cleanup" /etc/cron.d/docker-cleanup
 
 # go
 mkdir -p $HOME/go/bin
 
 # fish
 mkdir -p ~/.config/fish
-rsync -a ~/server-init/config/fish/config.fish ~/.config/fish/config.fish
-rsync -a ~/server-init/config/fish/conf.d ~/.config/fish/
+rsync -a "$DIR/fish/config.fish" ~/.config/fish/config.fish
+rsync -a "$DIR/fish/conf.d" ~/.config/fish/
 chsh -s /usr/bin/fish $USER
 
 # starship
 curl -sS https://starship.rs/install.sh | sh -s -- -y
-rsync -a ~/server-init/config/starship/server.toml ~/.config/starship.toml
+rsync -a "$DIR/starship/server.toml" ~/.config/starship.toml
 
 # caddy
-rsync -a ~/server-init/config/caddy/Caddyfile /etc/caddy/Caddyfile
+rsync -a "$DIR/caddy/Caddyfile" /etc/caddy/Caddyfile
 sudo systemctl start caddy
 
 # ssh (убрать приветствие)
